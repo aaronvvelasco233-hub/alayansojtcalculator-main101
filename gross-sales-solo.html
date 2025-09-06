@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gross Sales (Solo Parent) Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 480px;
+      margin: auto;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #222;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    p.formula-label {
+      font-weight: 600;
+      margin-top: 30px;
+      margin-bottom: 5px;
+    }
+    .formula-container {
+      font-family: monospace;
+      border-radius: 8px;
+      padding: 12px 15px;
+      user-select: none;
+      margin-bottom: 15px;
+    }
+    .formula-container.static {
+      background-color: #d0d0d0;
+      color: #555;
+      font-style: italic;
+    }
+    .formula-container.dynamic {
+      background-color: #c0f0f0;
+      color: #006666;
+      font-weight: 600;
+    }
+    form label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    input[type="number"]::-webkit-inner-spin-button, 
+    input[type="number"]::-webkit-outer-spin-button { 
+      -webkit-appearance: none;
+      margin: 0; 
+    }
+    input[type="number"]:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 8px #a2c4ff;
+      animation: focusPulse 0.6s ease-in-out;
+    }
+    @keyframes focusPulse {
+      0%, 100% { box-shadow: 0 0 8px #a2c4ff; }
+      50% { box-shadow: 0 0 14px #3399ff; }
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 0;
+      width: 100%;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button.hidden {
+      display: none;
+    }
+    .toggle-container {
+      margin: 20px 0;
+      font-weight: 600;
+      user-select: none;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: 700;
+      font-size: 1.3rem;
+      min-height: 2em;
+    }
+    a {
+      display: inline-block;
+      margin-top: 30px;
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gross Sales (Solo Parent) Calculator</h1>
+
+  <div class="toggle-container">
+    <label><input type="checkbox" id="liveCalcToggle" /> Enable Live Calculation (Real-time)</label>
+  </div>
+
+  <p class="formula-label">Static Formula:</p>
+  <div id="staticFormula" class="formula-container static" aria-label="Static formula">
+    Gross Sales = (VAT Exempt Sales − S. Citizen Disc − PWD Discount − Solo Parent Discount) + Tax Sales
+  </div>
+
+  <p class="formula-label">Current Inputs Formula:</p>
+  <div id="dynamicFormula" class="formula-container dynamic" aria-live="polite" aria-atomic="true" aria-label="Dynamic formula with current input values">
+    Gross Sales = (0 − 0 − 0 − 0) + 0
+  </div>
+
+  <form id="grossSalesSoloForm" autocomplete="off" aria-label="Gross Sales Solo Parent Input Form">
+    <label for="vatExemptSales">VAT Exempt Sales:</label>
+    <input 
+      type="number" 
+      id="vatExemptSales" 
+      step="0.01" 
+      placeholder="0.00" 
+      inputmode="decimal" 
+      min="0" 
+      required
+    >
+
+    <label for="seniorDisc">Senior Citizen Discount:</label>
+    <input 
+      type="number" 
+      id="seniorDisc" 
+      step="0.01" 
+      placeholder="0.00" 
+      inputmode="decimal" 
+      min="0" 
+      required
+    >
+
+    <label for="pwdDisc">PWD Discount:</label>
+    <input 
+      type="number" 
+      id="pwdDisc" 
+      step="0.01" 
+      placeholder="0.00" 
+      inputmode="decimal" 
+      min="0" 
+      required
+    >
+
+    <label for="soloParentDisc">Solo Parent Discount:</label>
+    <input 
+      type="number" 
+      id="soloParentDisc" 
+      step="0.01" 
+      placeholder="0.00" 
+      inputmode="decimal" 
+      min="0" 
+      required
+    >
+
+    <label for="taxSales">Tax Sales:</label>
+    <input 
+      type="number" 
+      id="taxSales" 
+      step="0.01" 
+      placeholder="0.00" 
+      inputmode="decimal" 
+      min="0" 
+      required
+    >
+
+    <button type="button" id="computeBtn" onclick="calculateGrossSalesSolo()">Compute</button>
+  </form>
+
+  <div id="result" aria-live="polite" aria-atomic="true"></div>
+
+  <p><a href="index.html">← Back to Home</a></p>
+
+  <script>
+    const liveToggle = document.getElementById('liveCalcToggle');
+    const inputs = document.querySelectorAll('#grossSalesSoloForm input[type="number"]');
+    const computeBtn = document.getElementById('computeBtn');
+    const resultDiv = document.getElementById('result');
+    const dynamicFormulaDiv = document.getElementById('dynamicFormula');
+
+    // Update dynamic formula text with current input values
+    function updateDynamicFormula() {
+      const vatExemptSales = parseFloat(document.getElementById('vatExemptSales').value) || 0;
+      const seniorDisc = parseFloat(document.getElementById('seniorDisc').value) || 0;
+      const pwdDisc = parseFloat(document.getElementById('pwdDisc').value) || 0;
+      const soloParentDisc = parseFloat(document.getElementById('soloParentDisc').value) || 0;
+      const taxSales = parseFloat(document.getElementById('taxSales').value) || 0;
+
+      dynamicFormulaDiv.textContent =
+        `Gross Sales = (${vatExemptSales} − ${seniorDisc} − ${pwdDisc} − ${soloParentDisc}) + ${taxSales}`;
+    }
+
+    // Calculate gross sales and show result
+    function calculateGrossSalesSolo() {
+      const vatExemptSales = parseFloat(document.getElementById('vatExemptSales').value) || 0;
+      const seniorDisc = parseFloat(document.getElementById('seniorDisc').value) || 0;
+      const pwdDisc = parseFloat(document.getElementById('pwdDisc').value) || 0;
+      const soloParentDisc = parseFloat(document.getElementById('soloParentDisc').value) || 0;
+      const taxSales = parseFloat(document.getElementById('taxSales').value) || 0;
+
+      const grossSales = (vatExemptSales - seniorDisc - pwdDisc - soloParentDisc) + taxSales;
+
+      resultDiv.innerHTML = `Gross Sales (Solo Parent) = <strong>${grossSales.toFixed(2)}</strong>`;
+      updateDynamicFormula();
+    }
+
+    // Enable or disable live calculation mode
+    function enableLiveCalculation(enabled) {
+      if (enabled) {
+        computeBtn.classList.add('hidden');
+        inputs.forEach(input => input.addEventListener('input', calculateGrossSalesSolo));
+        calculateGrossSalesSolo(); // calculate initially
+      } else {
+        computeBtn.classList.remove('hidden');
+        inputs.forEach(input => input.removeEventListener('input', calculateGrossSalesSolo));
+        resultDiv.textContent = '';
+        updateDynamicFormula();
+      }
+    }
+
+    // Initialize: live mode off, show formula with zeros
+    enableLiveCalculation(false);
+
+    liveToggle.addEventListener('change', e => {
+      resultDiv.textContent = '';
+      enableLiveCalculation(e.target.checked);
+    });
+
+    // Show initial dynamic formula with zeros
+    updateDynamicFormula();
+  </script>
+</body>
+</html>

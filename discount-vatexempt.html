@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Discount / VAT Exempt Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    #container {
+      width: 480px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    select {
+      width: 100%;
+      font-size: 1.1rem;
+      padding: 8px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    section {
+      display: none; /* hide all initially */
+    }
+    section.active {
+      display: block;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .toggle-container {
+      margin-top: 10px;
+      font-weight: 600;
+      user-select: none;
+    }
+    form {
+      margin-bottom: 20px;
+      background: #fff;
+      padding: 15px 20px 25px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 6px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+    }
+    /* Remove spinner arrows for Webkit browsers */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none;
+      margin: 0; 
+    }
+    input[type="number"]:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 8px #a2c4ff;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 0;
+      width: 100%;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(0, 123, 255, 0.7);
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+    }
+    button.hidden {
+      display: none;
+    }
+    .result {
+      margin-top: 15px;
+      background: #fff8dc;
+      padding: 12px 15px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      min-height: 48px;
+    }
+    .formula-container {
+      background: #e0e0e0;
+      padding: 12px 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      margin-top: 15px;
+      user-select: none;
+      white-space: pre-wrap;
+      color: #555;
+    }
+    .formula-dynamic {
+      color: #007bff;
+      font-weight: 700;
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="container">
+    <h1>Discount / VAT Exempt Calculator</h1>
+
+    <label for="calculatorSelect"><strong>Select Calculator:</strong></label>
+    <select id="calculatorSelect" aria-label="Select Calculator">
+      <option value="calc1">1. Tax Sale per Customer</option>
+      <option value="calc2">2. VAT Exempt from Tax Sale</option>
+      <option value="calc3">3. Sales Tax from VAT Exempt</option>
+    </select>
+
+    <!-- 1. Tax Sale per Customer -->
+    <section id="calc1" class="active" aria-labelledby="title1">
+      <h2 id="title1">1. Tax Sale per Customer</h2>
+      <div class="toggle-container">
+        <label><input type="checkbox" id="liveToggle1" /> Enable Live Calculation (Real-time)</label>
+      </div>
+      <form id="form1" autocomplete="off" aria-describedby="staticFormula1 dynamicFormula1 result1">
+        <div class="formula-container" id="staticFormula1">
+Gross Sales ÷ Number of Customers = Tax Sale
+        </div>
+        <div class="formula-dynamic" id="dynamicFormula1" aria-live="polite" aria-atomic="true">
+Tax Sale = (0 ÷ 1)
+        </div>
+
+        <label for="gross1">Gross Sales:</label>
+        <input type="number" id="gross1" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+        <label for="customers1">Number of Customers:</label>
+        <input type="number" id="customers1" step="1" min="1" placeholder="0.00" inputmode="decimal" />
+
+        <button type="button" id="btn1" onclick="calcTaxSale()">Compute</button>
+
+        <div class="result" id="result1" aria-live="polite" aria-atomic="true"></div>
+      </form>
+    </section>
+
+    <!-- 2. VAT Exempt from Tax Sale -->
+    <section id="calc2" aria-labelledby="title2">
+      <h2 id="title2">2. VAT Exempt from Tax Sale</h2>
+      <div class="toggle-container">
+        <label><input type="checkbox" id="liveToggle2" /> Enable Live Calculation (Real-time)</label>
+      </div>
+      <form id="form2" autocomplete="off" aria-describedby="staticFormula2 dynamicFormula2 result2">
+        <div class="formula-container" id="staticFormula2">
+Tax Sale ÷ 1.12 = VAT Exempt
+        </div>
+        <div class="formula-dynamic" id="dynamicFormula2" aria-live="polite" aria-atomic="true">
+VAT Exempt = (0 ÷ 1.12)
+        </div>
+
+        <label for="taxSale2">Tax Sale:</label>
+        <input type="number" id="taxSale2" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+        <button type="button" id="btn2" onclick="calcVatExempt()">Compute</button>
+
+        <div class="result" id="result2" aria-live="polite" aria-atomic="true"></div>
+      </form>
+    </section>
+
+    <!-- 3. Sales Tax from VAT Exempt -->
+    <section id="calc3" aria-labelledby="title3">
+      <h2 id="title3">3. Sales Tax from VAT Exempt</h2>
+      <div class="toggle-container">
+        <label><input type="checkbox" id="liveToggle3" /> Enable Live Calculation (Real-time)</label>
+      </div>
+      <form id="form3" autocomplete="off" aria-describedby="staticFormula3 dynamicFormula3 result3">
+        <div class="formula-container" id="staticFormula3">
+VAT Exempt × 0.12 = Sales Tax
+        </div>
+        <div class="formula-dynamic" id="dynamicFormula3" aria-live="polite" aria-atomic="true">
+Sales Tax = (0 × 0.12)
+        </div>
+
+        <label for="vatExempt3">VAT Exempt:</label>
+        <input type="number" id="vatExempt3" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+        <button type="button" id="btn3" onclick="calcSalesTax()">Compute</button>
+
+        <div class="result" id="result3" aria-live="polite" aria-atomic="true"></div>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    // Calculator section toggling
+    const calculatorSelect = document.getElementById('calculatorSelect');
+    const calculators = {
+      calc1: document.getElementById('calc1'),
+      calc2: document.getElementById('calc2'),
+      calc3: document.getElementById('calc3'),
+    };
+
+    function showCalculator(id) {
+      Object.entries(calculators).forEach(([key, elem]) => {
+        if(key === id) elem.classList.add('active');
+        else elem.classList.remove('active');
+      });
+    }
+
+    calculatorSelect.addEventListener('change', (e) => {
+      showCalculator(e.target.value);
+    });
+
+    // Initially show first
+    showCalculator(calculatorSelect.value);
+
+    // === Calculator 1 ===
+    const liveToggle1 = document.getElementById('liveToggle1');
+    const btn1 = document.getElementById('btn1');
+    const gross1 = document.getElementById('gross1');
+    const customers1 = document.getElementById('customers1');
+    const dynamicFormula1 = document.getElementById('dynamicFormula1');
+    const result1 = document.getElementById('result1');
+
+    function updateFormula1() {
+      const g = parseFloat(gross1.value) || 0;
+      const c = parseInt(customers1.value) || 1;
+      dynamicFormula1.textContent = `Tax Sale = (${g} ÷ ${c || 1})`;
+    }
+
+    function calcTaxSale() {
+      const g = parseFloat(gross1.value) || 0;
+      let c = parseInt(customers1.value) || 1;
+      if(c < 1) c = 1;
+      if (c === 0) {
+        result1.textContent = 'Number of customers cannot be zero.';
+        return;
+      }
+      const taxSale = g / c;
+      result1.textContent = `Tax Sale per Customer = ${taxSale.toFixed(2)}`;
+      updateFormula1();
+    }
+
+    function enableLive1(enabled) {
+      if(enabled) {
+        btn1.classList.add('hidden');
+        gross1.addEventListener('input', calcTaxSale);
+        customers1.addEventListener('input', calcTaxSale);
+        calcTaxSale();
+      } else {
+        btn1.classList.remove('hidden');
+        gross1.removeEventListener('input', calcTaxSale);
+        customers1.removeEventListener('input', calcTaxSale);
+        result1.textContent = '';
+        updateFormula1();
+      }
+    }
+    liveToggle1.addEventListener('change', e => enableLive1(e.target.checked));
+    updateFormula1();
+
+    // === Calculator 2 ===
+    const liveToggle2 = document.getElementById('liveToggle2');
+    const btn2 = document.getElementById('btn2');
+    const taxSale2 = document.getElementById('taxSale2');
+    const dynamicFormula2 = document.getElementById('dynamicFormula2');
+    const result2 = document.getElementById('result2');
+
+    function updateFormula2() {
+      const t = parseFloat(taxSale2.value) || 0;
+      dynamicFormula2.textContent = `VAT Exempt = (${t} ÷ 1.12)`;
+    }
+
+    function calcVatExempt() {
+      const t = parseFloat(taxSale2.value) || 0;
+      const vatExempt = t / 1.12;
+      result2.textContent = `VAT Exempt = ${vatExempt.toFixed(2)}`;
+      updateFormula2();
+    }
+
+    function enableLive2(enabled) {
+      if(enabled) {
+        btn2.classList.add('hidden');
+        taxSale2.addEventListener('input', calcVatExempt);
+        calcVatExempt();
+      } else {
+        btn2.classList.remove('hidden');
+        taxSale2.removeEventListener('input', calcVatExempt);
+        result2.textContent = '';
+        updateFormula2();
+      }
+    }
+    liveToggle2.addEventListener('change', e => enableLive2(e.target.checked));
+    updateFormula2();
+
+    // === Calculator 3 ===
+    const liveToggle3 = document.getElementById('liveToggle3');
+    const btn3 = document.getElementById('btn3');
+    const vatExempt3 = document.getElementById('vatExempt3');
+    const dynamicFormula3 = document.getElementById('dynamicFormula3');
+    const result3 = document.getElementById('result3');
+
+    function updateFormula3() {
+      const v = parseFloat(vatExempt3.value) || 0;
+      dynamicFormula3.textContent = `Sales Tax = (${v} × 0.12)`;
+    }
+
+    function calcSalesTax() {
+      const v = parseFloat(vatExempt3.value) || 0;
+      const salesTax = v * 0.12;
+      result3.textContent = `Sales Tax = ${salesTax.toFixed(2)}`;
+      updateFormula3();
+    }
+
+    function enableLive3(enabled) {
+      if(enabled) {
+        btn3.classList.add('hidden');
+        vatExempt3.addEventListener('input', calcSalesTax);
+        calcSalesTax();
+      } else {
+        btn3.classList.remove('hidden');
+        vatExempt3.removeEventListener('input', calcSalesTax);
+        result3.textContent = '';
+        updateFormula3();
+      }
+    }
+    liveToggle3.addEventListener('change', e => enableLive3(e.target.checked));
+    updateFormula3();
+
+  </script>
+
+</body>
+</html>

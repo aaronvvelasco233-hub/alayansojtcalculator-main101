@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Net Sales Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 480px;
+      margin: auto;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #222;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    p.formula-label {
+      font-weight: 600;
+      margin-top: 30px;
+      margin-bottom: 5px;
+    }
+    .formula-container {
+      font-family: monospace;
+      border-radius: 8px;
+      padding: 12px 15px;
+      user-select: none;
+      margin-bottom: 15px;
+    }
+    .formula-container.static {
+      background-color: #d0d0d0;
+      color: #555;
+      font-style: italic;
+    }
+    .formula-container.dynamic {
+      background-color: #c0f0f0;
+      color: #006666;
+      font-weight: 600;
+    }
+    form label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    input[type="number"]::-webkit-inner-spin-button, 
+    input[type="number"]::-webkit-outer-spin-button { 
+      -webkit-appearance: none;
+      margin: 0; 
+    }
+    input[type="number"]:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 8px #a2c4ff;
+      animation: focusPulse 0.6s ease-in-out;
+    }
+    @keyframes focusPulse {
+      0%, 100% { box-shadow: 0 0 8px #a2c4ff; }
+      50% { box-shadow: 0 0 14px #3399ff; }
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 0;
+      width: 100%;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button.hidden {
+      display: none;
+    }
+    .toggle-container {
+      margin: 20px 0;
+      font-weight: 600;
+      user-select: none;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: 700;
+      font-size: 1.3rem;
+      min-height: 2em;
+    }
+    a {
+      display: inline-block;
+      margin-top: 30px;
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Net Sales Calculator</h1>
+
+  <div class="toggle-container">
+    <label><input type="checkbox" id="liveCalcToggle" /> Enable Live Calculation (Real-time)</label>
+  </div>
+
+  <p class="formula-label">Static Formula:</p>
+  <div id="staticFormula" class="formula-container static" aria-label="Static formula">
+    Net Sales = Gross Sales − Total Tax
+  </div>
+
+  <p class="formula-label">Current Inputs Formula:</p>
+  <div id="dynamicFormula" class="formula-container dynamic" aria-live="polite" aria-atomic="true" aria-label="Dynamic formula with current input values">
+    Net Sales = 0 − 0
+  </div>
+
+  <form id="netSalesForm" autocomplete="off" aria-label="Net sales input form">
+    <label for="grossSales">Gross Sales:</label>
+    <input
+      type="number"
+      id="grossSales"
+      step="0.01"
+      placeholder="0.00"
+      inputmode="decimal"
+      min="0"
+      required
+    />
+
+    <label for="totalTax">Total Tax:</label>
+    <input
+      type="number"
+      id="totalTax"
+      step="0.01"
+      placeholder="0.00"
+      inputmode="decimal"
+      min="0"
+      required
+    />
+
+    <button type="button" id="computeBtn" onclick="calculateNetSales()">Compute</button>
+  </form>
+
+  <div id="result" aria-live="polite" aria-atomic="true"></div>
+
+  <p><a href="index.html">← Back to Home</a></p>
+
+  <script>
+    const liveToggle = document.getElementById('liveCalcToggle');
+    const grossSalesInput = document.getElementById('grossSales');
+    const totalTaxInput = document.getElementById('totalTax');
+    const computeBtn = document.getElementById('computeBtn');
+    const resultDiv = document.getElementById('result');
+    const dynamicFormulaDiv = document.getElementById('dynamicFormula');
+
+    function updateDynamicFormula() {
+      const grossSales = parseFloat(grossSalesInput.value) || 0;
+      const totalTax = parseFloat(totalTaxInput.value) || 0;
+      dynamicFormulaDiv.textContent = `Net Sales = ${grossSales} − ${totalTax}`;
+    }
+
+    function calculateNetSales() {
+      const grossSales = parseFloat(grossSalesInput.value) || 0;
+      const totalTax = parseFloat(totalTaxInput.value) || 0;
+      const netSales = grossSales - totalTax;
+
+      resultDiv.innerHTML = `Net Sales = <strong>${netSales.toFixed(2)}</strong>`;
+      updateDynamicFormula();
+    }
+
+    function enableLiveCalculation(enabled) {
+      if (enabled) {
+        computeBtn.classList.add('hidden');
+        grossSalesInput.addEventListener('input', calculateNetSales);
+        totalTaxInput.addEventListener('input', calculateNetSales);
+        calculateNetSales(); // initial calculation
+      } else {
+        computeBtn.classList.remove('hidden');
+        grossSalesInput.removeEventListener('input', calculateNetSales);
+        totalTaxInput.removeEventListener('input', calculateNetSales);
+        resultDiv.textContent = '';
+        updateDynamicFormula();
+      }
+    }
+
+    // Initialize with live calculation off and initial formula showing zeros
+    enableLiveCalculation(false);
+
+    liveToggle.addEventListener('change', (e) => {
+      resultDiv.textContent = '';
+      enableLiveCalculation(e.target.checked);
+    });
+
+    updateDynamicFormula();
+  </script>
+
+</body>
+</html>

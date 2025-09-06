@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Total Tax Sales (Solo Parent)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 480px;
+      margin: 30px auto;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+      box-sizing: border-box;
+      font-weight: 600;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    input[type="number"]:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 8px #a2c4ff;
+    }
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px 0;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 12px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button.hidden {
+      display: none;
+    }
+    .result {
+      margin-top: 20px;
+      background: #fff8dc;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      text-align: center;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      user-select: text;
+      min-height: 48px;
+    }
+    .formula-container {
+      background: #e0e0e0;
+      padding: 12px 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      margin-top: 15px;
+      user-select: none;
+      white-space: pre-wrap;
+      color: #555;
+    }
+    .formula-dynamic {
+      color: #007bff;
+      font-weight: 700;
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+    .toggle-container {
+      margin-top: 15px;
+      font-weight: 600;
+      user-select: none;
+    }
+    p.back-home {
+      text-align: center;
+      margin-top: 30px;
+    }
+    p.back-home a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    p.back-home a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Total Tax Sales Calculator (Solo Parent)</h1>
+
+  <p class="toggle-container">
+    <label><input type="checkbox" id="liveToggle" /> Enable Live Calculation (Real-time)</label>
+  </p>
+
+  <div class="formula-container" aria-label="Static formula">
+    Total Tax = ((Gross Sales + Senior Citizen Disc + PWD Discount + Solo Parent Disc - (VAT Exempted Sales ÷ 1.12)) × 0.12)
+  </div>
+  <div class="formula-dynamic" id="dynamicFormula" aria-live="polite" aria-atomic="true">
+    Total Tax = ((0 + 0 + 0 + 0 - (0 ÷ 1.12)) × 0.12)
+  </div>
+
+  <form id="soloParentForm" autocomplete="off" aria-label="Total tax sales solo parent calculator" aria-describedby="dynamicFormula result">
+    <label for="grossSales">Gross Sales:</label>
+    <input type="number" id="grossSales" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+    <label for="seniorDisc">Senior Citizen Discount:</label>
+    <input type="number" id="seniorDisc" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+    <label for="pwdDisc">PWD Discount:</label>
+    <input type="number" id="pwdDisc" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+    <label for="soloParentDisc">Solo Parent Discount:</label>
+    <input type="number" id="soloParentDisc" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+    <label for="vatExemptedSales">VAT Exempted Sales:</label>
+    <input type="number" id="vatExemptedSales" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+
+    <button type="button" id="computeBtn" onclick="calculateTotalTaxSolo()">Compute</button>
+  </form>
+
+  <div id="result" class="result" aria-live="polite" aria-atomic="true"></div>
+
+  <p class="back-home">
+    <a href="index.html">← Back to Home</a>
+  </p>
+
+  <script>
+    const liveToggle = document.getElementById('liveToggle');
+    const computeBtn = document.getElementById('computeBtn');
+    const grossSales = document.getElementById('grossSales');
+    const seniorDisc = document.getElementById('seniorDisc');
+    const pwdDisc = document.getElementById('pwdDisc');
+    const soloParentDisc = document.getElementById('soloParentDisc');
+    const vatExemptedSales = document.getElementById('vatExemptedSales');
+    const dynamicFormula = document.getElementById('dynamicFormula');
+    const result = document.getElementById('result');
+
+    function updateDynamicFormula() {
+      const g = parseFloat(grossSales.value) || 0;
+      const s = parseFloat(seniorDisc.value) || 0;
+      const p = parseFloat(pwdDisc.value) || 0;
+      const sp = parseFloat(soloParentDisc.value) || 0;
+      const v = parseFloat(vatExemptedSales.value) || 0;
+
+      dynamicFormula.textContent = `Total Tax = ((${g} + ${s} + ${p} + ${sp} - (${v} ÷ 1.12)) × 0.12)`;
+    }
+
+    function calculateTotalTaxSolo() {
+      const g = parseFloat(grossSales.value) || 0;
+      const s = parseFloat(seniorDisc.value) || 0;
+      const p = parseFloat(pwdDisc.value) || 0;
+      const sp = parseFloat(soloParentDisc.value) || 0;
+      const v = parseFloat(vatExemptedSales.value) || 0;
+
+      const baseAmount = g + s + p + sp - (v / 1.12);
+      const totalTax = baseAmount * 0.12;
+
+      result.innerHTML = `Total Tax Sales (Solo Parent) = <strong>${totalTax.toFixed(2)}</strong>`;
+
+      updateDynamicFormula();
+    }
+
+    function toggleLiveCalculation(enabled) {
+      if (enabled) {
+        computeBtn.classList.add('hidden');
+        grossSales.addEventListener('input', calculateTotalTaxSolo);
+        seniorDisc.addEventListener('input', calculateTotalTaxSolo);
+        pwdDisc.addEventListener('input', calculateTotalTaxSolo);
+        soloParentDisc.addEventListener('input', calculateTotalTaxSolo);
+        vatExemptedSales.addEventListener('input', calculateTotalTaxSolo);
+        calculateTotalTaxSolo();
+      } else {
+        computeBtn.classList.remove('hidden');
+        grossSales.removeEventListener('input', calculateTotalTaxSolo);
+        seniorDisc.removeEventListener('input', calculateTotalTaxSolo);
+        pwdDisc.removeEventListener('input', calculateTotalTaxSolo);
+        soloParentDisc.removeEventListener('input', calculateTotalTaxSolo);
+        vatExemptedSales.removeEventListener('input', calculateTotalTaxSolo);
+        result.textContent = '';
+        updateDynamicFormula();
+      }
+    }
+
+    liveToggle.addEventListener('change', e => toggleLiveCalculation(e.target.checked));
+
+    // Initialize formula on load
+    updateDynamicFormula();
+  </script>
+</body>
+</html>

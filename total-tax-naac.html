@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Total Tax Sales (NAAC)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 480px;
+      margin: 30px auto;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+      box-sizing: border-box;
+      font-weight: 600;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    input[type=number]:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 8px #a2c4ff;
+      animation: focusPulse 0.6s ease-in-out;
+    }
+    @keyframes focusPulse {
+      0%, 100% { box-shadow: 0 0 8px #a2c4ff; }
+      50% { box-shadow: 0 0 14px #3399ff; }
+    }
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px 0;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 12px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      background: #fff8dc;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      text-align: center;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      user-select: text;
+    }
+    p.back-home {
+      text-align: center;
+      margin-top: 30px;
+    }
+    p.back-home a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    p.back-home a:hover {
+      text-decoration: underline;
+    }
+    /* Toggle container */
+    .toggle-container {
+      margin-bottom: 20px;
+      font-weight: 600;
+      user-select: none;
+    }
+    .toggle-container label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    /* Formula containers */
+    .formula-container {
+      font-family: monospace;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      user-select: none;
+    }
+    .formula-container.static {
+      background: #e0e0e0;
+      color: #555;
+      font-style: italic;
+    }
+    .formula-container.dynamic {
+      background: #c0f0f0;
+      color: #006666;
+      font-weight: 600;
+      white-space: pre-wrap;
+    }
+    /* Hide compute button in live mode */
+    #computeBtn.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Total Tax Sales Calculator (NAAC)</h1>
+
+  <div class="toggle-container">
+    <label>
+      <input type="checkbox" id="liveCalcToggle" />
+      Enable Live Calculation (Real-time)
+    </label>
+  </div>
+
+  <div><strong>Static Formula:</strong></div>
+  <div id="staticFormula" class="formula-container static" aria-label="Static formula">
+    Total Tax = (((Gross Sales - (((NAC Disc / 0.20) × 1.12) - NAC Disc)) + Senior Citizen Disc + PWD Discount - (VAT Exempted Sales / 1.12)) × 0.12) + (((NAC Disc / 0.20) × 0.12))
+  </div>
+
+  <div><strong>Current Inputs Formula:</strong></div>
+  <div id="dynamicFormula" class="formula-container dynamic" aria-live="polite" aria-atomic="true" aria-label="Dynamic formula with current input values">
+    Total Tax = (((0 - (((0 / 0.20) × 1.12) - 0)) + 0 + 0 - (0 / 1.12)) × 0.12) + (((0 / 0.20) × 0.12))
+  </div>
+
+  <form id="naacForm" autocomplete="off" aria-label="NAAC Total Tax Sales calculator">
+    <label for="grossSales">Gross Sales:</label>
+    <input type="number" id="grossSales" step="0.01" min="0" placeholder="0.00" inputmode="decimal" required>
+
+    <label for="nacDisc">NAC Discount:</label>
+    <input type="number" id="nacDisc" step="0.01" min="0" placeholder="0.00" inputmode="decimal" required>
+
+    <label for="seniorDisc">Senior Citizen Discount:</label>
+    <input type="number" id="seniorDisc" step="0.01" min="0" placeholder="0.00" inputmode="decimal" required>
+
+    <label for="pwdDisc">PWD Discount:</label>
+    <input type="number" id="pwdDisc" step="0.01" min="0" placeholder="0.00" inputmode="decimal" required>
+
+    <label for="vatExemptedSales">VAT Exempted Sales:</label>
+    <input type="number" id="vatExemptedSales" step="0.01" min="0" placeholder="0.00" inputmode="decimal" required>
+
+    <button type="button" id="computeBtn">Compute</button>
+  </form>
+
+  <div id="result" class="result" aria-live="polite" aria-atomic="true"></div>
+
+  <p class="back-home">
+    <a href="index.html">← Back to Home</a>
+  </p>
+
+  <script>
+    const liveToggle = document.getElementById("liveCalcToggle");
+    const form = document.getElementById("naacForm");
+    const computeBtn = document.getElementById("computeBtn");
+    const resultDiv = document.getElementById("result");
+    const dynamicFormulaDiv = document.getElementById("dynamicFormula");
+    const inputs = form.querySelectorAll('input[type="number"]');
+
+    function updateDynamicFormula() {
+      const grossSales = parseFloat(document.getElementById('grossSales').value) || 0;
+      const nacDisc = parseFloat(document.getElementById('nacDisc').value) || 0;
+      const seniorDisc = parseFloat(document.getElementById('seniorDisc').value) || 0;
+      const pwdDisc = parseFloat(document.getElementById('pwdDisc').value) || 0;
+      const vatExemptedSales = parseFloat(document.getElementById('vatExemptedSales').value) || 0;
+
+      const nacComponent = `((((${nacDisc} / 0.20) × 1.12) - ${nacDisc}))`;
+      const vatExemptedDiv = `(${vatExemptedSales} / 1.12)`;
+
+      dynamicFormulaDiv.textContent =
+        `Total Tax = (((${grossSales} - ${nacComponent}) + ${seniorDisc} + ${pwdDisc} - ${vatExemptedDiv}) × 0.12) + (((${nacDisc} / 0.20) × 0.12))`;
+    }
+
+    function calculateTotalTaxNaac() {
+      const grossSales = parseFloat(document.getElementById('grossSales').value) || 0;
+      const nacDisc = parseFloat(document.getElementById('nacDisc').value) || 0;
+      const seniorDisc = parseFloat(document.getElementById('seniorDisc').value) || 0;
+      const pwdDisc = parseFloat(document.getElementById('pwdDisc').value) || 0;
+      const vatExemptedSales = parseFloat(document.getElementById('vatExemptedSales').value) || 0;
+
+      // Calculate adjusted NAC component:
+      const nacComponent = ((nacDisc / 0.20) * 1.12) - nacDisc;
+
+      // Calculate base for tax:
+      const baseTax = grossSales - nacComponent + seniorDisc + pwdDisc - (vatExemptedSales / 1.12);
+
+      // Calculate total tax:
+      const totalTax = (baseTax * 0.12) + ((nacDisc / 0.20) * 0.12);
+
+      resultDiv.innerHTML =
+        `Total Tax Sales (NAAC) = <strong>${totalTax.toFixed(2)}</strong>`;
+    }
+
+    function enableLiveCalculation(enabled) {
+      if (enabled) {
+        computeBtn.classList.add("hidden");
+        inputs.forEach(input => input.addEventListener('input', calculateTotalTaxNaac));
+        inputs.forEach(input => input.addEventListener('input', updateDynamicFormula));
+        calculateTotalTaxNaac();
+        updateDynamicFormula();
+      } else {
+        computeBtn.classList.remove("hidden");
+        inputs.forEach(input => input.removeEventListener('input', calculateTotalTaxNaac));
+        inputs.forEach(input => input.removeEventListener('input', updateDynamicFormula));
+        resultDiv.textContent = '';
+        updateDynamicFormula();
+      }
+    }
+
+    computeBtn.addEventListener('click', calculateTotalTaxNaac);
+
+    liveToggle.addEventListener('change', e => enableLiveCalculation(e.target.checked));
+
+    // Initialize dynamic formula on page load
+    updateDynamicFormula();
+  </script>
+</body>
+</html>
